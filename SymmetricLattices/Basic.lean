@@ -5,6 +5,14 @@ section
 variable {α : Type*} [Lattice α] {a b : α}
 @[simp] theorem Set.Icc.inf_eq (c d : Set.Icc a b) : ↑(c ⊓ d) = (c : α) ⊓ (d : α) := by rfl
 @[simp] theorem Set.Icc.sup_eq (c d : Set.Icc a b) : ↑(c ⊔ d) = (c : α) ⊔ (d : α) := by rfl
+
+@[simp, norm_cast]
+lemma Set.Ici.coe_sup {x y : Ici a} :
+    (↑(x ⊔ y) : α) = (x : α) ⊔ (y : α) := rfl
+@[simp, norm_cast]
+lemma Set.Ici.coe_inf {x y : Ici a} :
+    (↑(x ⊓ y) : α) = (x : α) ⊓ (y : α) := rfl
+
 end
 
 
@@ -122,6 +130,49 @@ def infIccOrderIsoIccSup (h : IsModular a b) (h' : IsDualModular b a) : Set.Icc 
     rw[Subtype.mk_le_mk]
     simp only [Set.Icc.inf_eq, Set.Icc.sup_eq]
     apply h' _ le
+
+@[simp] lemma IsModular.Ici_iff {a b : Set.Ici c} : IsModular a b ↔ IsModular (a : α) (b : α) := by
+  constructor
+  · intro h' x le
+    have prop : x ⊔ c ∈ Set.Ici c := le_sup_right
+    replace h' := h'.eq ⟨_,prop⟩
+    rcases b with ⟨b,hb⟩
+    rcases a with ⟨a,ha⟩
+    simp at h'
+    specialize h' le hb
+    rw[Subtype.mk_eq_mk] at h'
+    simp at h' |-
+    rw[sup_assoc, sup_of_le_right ha] at h'
+    rw[h', sup_assoc]
+    gcongr
+    simp only [le_inf_iff, sup_le_iff, inf_le_left, and_true, inf_le_right]
+    exact ⟨ha,hb⟩
+  · intro h' ⟨x,hx⟩ le
+    rcases b with ⟨b,hb⟩
+    rcases a with ⟨a,ha⟩
+    rw[Subtype.mk_le_mk]
+    simp only [Set.Ici.coe_inf, Set.Ici.coe_sup]
+    apply h' _ le
+
+@[simp] lemma IsModular.Iic_iff {a b : Set.Iic c} : IsModular a b ↔ IsModular (a : α) (b : α) := by
+  constructor
+  · intro h' x le
+    have prop : x ∈ Set.Iic c := le.trans b.prop
+    replace h' := h'.eq ⟨_,prop⟩
+    rcases b with ⟨b,hb⟩
+    rcases a with ⟨a,ha⟩
+    simp at h'
+    specialize h' le
+    rw[Subtype.mk_eq_mk] at h'
+    simp at h' |-
+    exact le_of_eq h'
+  · intro h' ⟨x,hx⟩ le
+    rcases b with ⟨b,hb⟩
+    rcases a with ⟨a,ha⟩
+    rw[Subtype.mk_le_mk]
+    simp only [Set.Iic.coe_inf, Set.Iic.coe_sup]
+    apply h' _ le
+
 
 @[simp] lemma IsDualModular.Icc_iff (h : c ≤ d) {a b : Set.Icc c d} : IsDualModular a b ↔ IsDualModular (a : α) (b : α) := by
   constructor
