@@ -172,3 +172,118 @@ theorem Lattice.isBotSymmetric_of_modular_to_dualModular [OrderBot α]
     convert h _ _ mod this a le using 1
     · rw[inf_comm, sup_comm]
     · rw[inf_comm, sup_comm]
+
+theorem IsBotSymmetricLattice.isSymmetric_of_complemented [BoundedOrder α] [IsBotSymmetricLattice α]
+    (h : ∀ a : α, ∃ b, IsCompl a b ∧ Lattice.IsModular a b ∧ Lattice.IsDualModular b a) : IsSymmetricLattice α where
+  isModular_symm {a b} mod := by
+    obtain ⟨c, compl, mod', dmod⟩ := h (a ⊓ b)
+    let iso := Lattice.infIccOrderIsoIccSup mod' dmod
+    --rw[compl.inf_eq_bot, compl.sup_eq_top] at iso
+    have a_in : a ∈ Set.Icc (a ⊓ b) (a ⊓ b ⊔ c) := by
+      rw[compl.sup_eq_top]
+      simp only [Set.Icc_top, Set.mem_Ici, inf_le_left]
+    have b_in : b ∈ Set.Icc (a ⊓ b) (a ⊓ b ⊔ c) := by
+      rw[compl.sup_eq_top]
+      simp only [Set.Icc_top, Set.mem_Ici, inf_le_right]
+    have eqa : (iso ⟨a ⊓ c, ⟨by simp[compl.inf_eq_bot], by simp⟩⟩) = ⟨a,a_in⟩ := by
+      rw[Subtype.mk_eq_mk, Lattice.infIccOrderIsoIccSup_apply]
+      simp only
+      rw[← dmod.eq]
+      · rw[inf_eq_left, sup_comm, compl.sup_eq_top]
+        simp only [le_top]
+      · simp only [ge_iff_le, inf_le_left]
+    have eqb : ↑ (iso ⟨b ⊓ c, ⟨by simp[compl.inf_eq_bot], by simp⟩⟩) = ⟨b,b_in⟩ := by
+      rw[Subtype.mk_eq_mk, Lattice.infIccOrderIsoIccSup_apply]
+      simp only
+      rw[← dmod.eq]
+      · rw[inf_eq_left, sup_comm, compl.sup_eq_top]
+        simp only [le_top]
+      · simp only [ge_iff_le, inf_le_right]
+    have mod2 : Lattice.IsModular (α := Set.Icc (a ⊓ b) (a ⊓ b ⊔ c)) ⟨a,a_in⟩ ⟨b,b_in⟩ := by
+      rw[Lattice.IsModular.Icc_iff le_sup_left]
+      exact mod
+    have mod3 : Lattice.IsModular (α := Set.Icc (a ⊓ b ⊓ c) c)
+        ⟨a ⊓ c, ⟨by simp[compl.inf_eq_bot], by simp⟩⟩
+        ⟨b ⊓ c, ⟨by simp[compl.inf_eq_bot], by simp⟩⟩ := by
+      rwa[← eqa, ← eqb, OrderIso.isModular_iff] at mod2
+    have mod3' := (Lattice.IsModular.Icc_iff inf_le_right).mp mod3
+    simp only at mod3'
+    have mod3'_symm := IsBotSymmetricLattice.isModular_symm_of_inf_eq_bot mod3'
+      (by rw[← inf_right_comm, ← inf_assoc, compl.inf_eq_bot, bot_inf_eq])
+    have mod3_symm : Lattice.IsModular (α := Set.Icc (a ⊓ b ⊓ c) c)
+        ⟨b ⊓ c, ⟨by simp[compl.inf_eq_bot], by simp⟩⟩
+        ⟨a ⊓ c, ⟨by simp[compl.inf_eq_bot], by simp⟩⟩ := by
+      rwa[Lattice.IsModular.Icc_iff inf_le_right]
+    have mod2_symm : Lattice.IsModular (α := Set.Icc (a ⊓ b) (a ⊓ b ⊔ c)) ⟨b,b_in⟩ ⟨a,a_in⟩ := by
+      rwa[← eqa, ← eqb, OrderIso.isModular_iff]
+    rw[Lattice.IsModular.Icc_iff le_sup_left] at mod2_symm
+    exact mod2_symm
+
+variable {ι : Type*} {α' : ι → Type*} [(i : ι) → Lattice (α' i)]
+instance [∀ i, IsSymmetricLattice (α' i)] : IsSymmetricLattice ((i : _) → α' i) where
+  isModular_symm {a} {b} := by
+    rw[Lattice.IsModular.pi_iff, Lattice.IsModular.pi_iff]
+    apply forall_imp
+    intro i
+    apply IsSymmetricLattice.isModular_symm
+
+theorem IsSymmetricLattice.pi_iff [ne : ∀ i, Nonempty (α' i)] : IsSymmetricLattice ((i : _) → α' i) ↔ ∀ i, IsSymmetricLattice (α' i) := by
+  constructor
+  · intro h i
+    constructor
+    classical
+    intro a b
+    let fa : (i : ι) → α' i := Function.update (fun i => ((ne i).some : α' i)) i a
+    let fb : (i : ι) → α' i := Function.update fa i b
+    intro mod
+    have t : Lattice.IsModular fa fb := by
+      rw[Lattice.IsModular.pi_iff]
+      intro j
+      by_cases h' : j = i
+      · rcases h'
+        simp[fa, fb, mod]
+      · simp only [ne_eq, h', not_false_eq_true, Function.update_of_ne, fa, fb]
+        rfl
+    have t := IsSymmetricLattice.isModular_symm t
+    rw[Lattice.IsModular.pi_iff] at t
+    specialize t i
+    simpa[fa, fb] using t
+  · intro h
+    infer_instance
+
+instance [∀ i, OrderBot (α' i)] [∀ i, IsBotSymmetricLattice (α' i)] : IsBotSymmetricLattice ((i : _) → α' i) where
+  isModular_symm_of_inf_eq_bot {a} {b} := by
+    rw[Lattice.IsModular.pi_iff, Lattice.IsModular.pi_iff]
+    intro mod eq i
+    apply IsBotSymmetricLattice.isModular_symm_of_inf_eq_bot (mod i) (congrFun eq i)
+
+theorem IsBotSymmetricLattice.pi_iff [∀ i, OrderBot (α' i)] : IsBotSymmetricLattice ((i : _) → α' i) ↔ ∀ i, IsBotSymmetricLattice (α' i) := by
+  constructor
+  · intro h i
+    constructor
+    classical
+    intro a b
+    let fa : (i : ι) → α' i := Function.update (fun i => ⊥) i a
+    let fb : (i : ι) → α' i := Function.update fa i b
+    intro mod h'
+    have t : Lattice.IsModular fa fb := by
+      rw[Lattice.IsModular.pi_iff]
+      intro j
+      by_cases h' : j = i
+      · rcases h'
+        simp[fa, fb, mod]
+      · simp only [ne_eq, h', not_false_eq_true, Function.update_of_ne, fa, fb]
+        rfl
+    have t := IsBotSymmetricLattice.isModular_symm_of_inf_eq_bot t
+    rw[Lattice.IsModular.pi_iff] at t
+    have : fa ⊓ fb = ⊥ := by
+      ext j
+      by_cases h'' : j = i
+      · rcases h''
+        simp[fa,fb, h']
+      · simp[h'', fa, fb]
+    convert t this i
+    · simp[fb]
+    · simp[fa]
+  · intro h
+    infer_instance

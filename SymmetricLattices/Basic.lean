@@ -111,6 +111,11 @@ def infIccOrderIsoIccSup (h : IsModular a b) (h' : IsDualModular b a) : Set.Icc 
       rw[h.eq _ hx2, h.eq _ hy2] at this
       simpa[*] using this
     · exact fun h => sup_le_sup_right h _
+
+@[simp] theorem infIccOrderIsoIccSup_apply {h : IsModular a b} {h' : IsDualModular b a} {c : Set.Icc (a ⊓ b) b} :
+    infIccOrderIsoIccSup h h' c = ↑ c ⊔ a := by
+  simp[infIccOrderIsoIccSup]
+
 /-- Lemma 1.4 -/
 @[simp] lemma IsModular.Icc_iff (h : c ≤ d) {a b : Set.Icc c d} : IsModular a b ↔ IsModular (a : α) (b : α) := by
   constructor
@@ -302,4 +307,116 @@ def isModularLattice_of_all_isModular (h : ∀ a b : α, Lattice.IsModular a b) 
   sup_inf_le_assoc_of_le _ _ := h _ _ _
 
 
+theorem OrderIso.isModular_iff {β : Type*} [Lattice β] (f : α ≃o β) {a a' : α} : Lattice.IsModular (f a) (f a') ↔ Lattice.IsModular a a' := by
+  unfold Lattice.IsModular
+  constructor
+  · intro h c le
+    specialize h (f c) (by gcongr)
+    rwa[← f.map_inf, ← f.map_sup, ← f.map_inf, ← f.map_sup, f.le_iff_le] at h
+  · intro h c le
+    obtain ⟨c', rfl⟩ := f.surjective c
+    rw[← f.map_inf, ← f.map_sup, ← f.map_inf, ← f.map_sup, f.le_iff_le]
+    apply h
+    rwa[← f.le_iff_le]
+
+namespace Lattice
+variable {β : Type*} [Lattice β] {ι : Type*} {α' : ι → Type*} [(i : ι) → Lattice (α' i)]
+-- TODO small prods and a couple other equivalences like for typeclasses
+lemma IsModular.pi_iff {a b : (i : ι) → α' i} : IsModular a b ↔ ∀ i, IsModular (a i) (b i) := by
+  unfold IsModular
+  constructor
+  · intro h i c le
+    classical
+    specialize h (Function.update b i c)
+    have : (Function.update b i c) ≤ b := by
+      intro j
+      by_cases h : i = j
+      · rcases h; simp[le]
+      · have : j ≠ i := Ne.symm h
+        simp[this]
+    specialize h this i
+    simpa using h
+  · intro h c le i
+    simp only [Pi.inf_apply, Pi.sup_apply]
+    apply h _ _ (le i)
+
+lemma IsModular.pair_iff {a a' : α} {b b' : β} : IsModular (a,b) (a',b') ↔ IsModular a a' ∧ IsModular b b' := by
+  unfold IsModular
+  rw[Prod.forall]
+  constructor
+  · intro h
+    constructor
+    · intro c le
+      specialize h c b' ⟨le, le_rfl⟩
+      exact h.1
+    · intro c le
+      specialize h a' c ⟨le_rfl, le⟩
+      exact h.2
+  · intro ⟨h1,h2⟩ a1 b2 ⟨le1,le2⟩
+    exact ⟨h1 _ le1, h2 _ le2⟩
+
+lemma IsDualModular.pair_iff {a a' : α} {b b' : β} : IsDualModular (a,b) (a',b') ↔ IsDualModular a a' ∧ IsDualModular b b' := by
+  unfold IsDualModular
+  rw[Prod.forall]
+  constructor
+  · intro h
+    constructor
+    · intro c le
+      specialize h c b' ⟨le, le_rfl⟩
+      exact h.1
+    · intro c le
+      specialize h a' c ⟨le_rfl, le⟩
+      exact h.2
+  · intro ⟨h1,h2⟩ a1 b2 ⟨le1,le2⟩
+    exact ⟨h1 _ le1, h2 _ le2⟩
+
+instance [IsModularLattice α] [IsModularLattice β] : IsModularLattice (α × β) := by
+  apply isModularLattice_of_all_isModular
+  intro ⟨a,b⟩ ⟨a',b'⟩
+  rw[IsModular.pair_iff]
+  exact ⟨pair_modular _ _, pair_modular _ _⟩
+
+theorem IsModularLattice.prod_iff [hα : Nonempty α] [hβ : Nonempty β] : IsModularLattice (α × β) ↔ IsModularLattice α ∧ IsModularLattice β := by
+  constructor
+  · intro h
+    constructor
+    · apply isModularLattice_of_all_isModular
+      intro a a'
+      have := pair_modular (a, hβ.some) (a', hβ.some)
+      rw[IsModular.pair_iff] at this
+      exact this.1
+    · apply isModularLattice_of_all_isModular
+      intro b b'
+      have := pair_modular (hα.some, b) (hα.some, b')
+      rw[IsModular.pair_iff] at this
+      exact this.2
+  · intro ⟨h1,h2⟩
+    infer_instance
+
+lemma IsDualModular.pi_iff {a b : (i : ι) → α' i} : IsDualModular a b ↔ ∀ i, IsDualModular (a i) (b i) := by
+  unfold IsDualModular
+  constructor
+  · intro h i c le
+    classical
+    specialize h (Function.update b i c)
+    have : b ≤ (Function.update b i c) := by
+      intro j
+      by_cases h : i = j
+      · rcases h; simp[le]
+      · have : j ≠ i := Ne.symm h
+        simp[this]
+    specialize h this i
+    simpa using h
+  · intro h c le i
+    simp only [Pi.inf_apply, Pi.sup_apply]
+    apply h _ _ (le i)
+
+instance IsModularLattice.pi [(i : ι) → IsModularLattice (α' i)] : IsModularLattice ((i : ι) → α' i) := by
+   apply isModularLattice_of_all_isModular
+   intro a b
+   rw[IsModular.pi_iff]
+   intro i
+   apply pair_modular
+
+end Lattice
 end
