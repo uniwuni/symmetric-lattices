@@ -1,15 +1,17 @@
 import SymmetricLattices.Basic
 import Mathlib.Order.Sublattice
 
+/-- Def 1.7 -/
 class IsSymmetricLattice (α : Type*) [Lattice α] : Prop where
   isModular_symm {a b : α} : Lattice.IsModular a b → Lattice.IsModular b a
 
+/-- Def 1.7 -/
 class IsDualSymmetricLattice (α : Type*) [Lattice α] : Prop where
   isDualModular_symm {a b : α} : Lattice.IsDualModular a b → Lattice.IsDualModular b a
-
+/-- Def 1.10 -/
 class IsWeaklyModularLattice (α : Type*) [Lattice α] [OrderBot α] : Prop where
    pair_isModular_of_inf_ne_bot {a b : α} (h : a ⊓ b ≠ ⊥) : Lattice.IsModular a b
-
+/-- Def 1.11 -/
 class IsBotSymmetricLattice (α : Type*) [Lattice α] [OrderBot α] : Prop where
   isModular_symm_of_inf_eq_bot {a b : α} : Lattice.IsModular a b → a ⊓ b = ⊥ → Lattice.IsModular b a
 
@@ -17,10 +19,11 @@ class IsBotSymmetricLattice (α : Type*) [Lattice α] [OrderBot α] : Prop where
 variable {α : Type*}
 instance [Lattice α] [IsModularLattice α] [OrderBot α]: IsWeaklyModularLattice α where
   pair_isModular_of_inf_ne_bot _ := pair_modular _ _
-
+/-- "It is evident" below 1.11 -/
 instance [Lattice α] [OrderBot α] [IsSymmetricLattice α] : IsBotSymmetricLattice α where
   isModular_symm_of_inf_eq_bot h _ := IsSymmetricLattice.isModular_symm h
 
+/-- Remark 1.12 -/
 instance [Lattice α] [OrderBot α] [IsBotSymmetricLattice α] {a : α} : IsBotSymmetricLattice (Set.Iic a) where
   isModular_symm_of_inf_eq_bot {a'} {b} h h' := by
     rcases a' with ⟨a',ha⟩
@@ -73,6 +76,7 @@ attribute [symm] IsSymmetricLattice.isModular_symm IsDualSymmetricLattice.isDual
 
 section
 variable {α : Type*} [Lattice α]
+/-- Theorem 1.9 -/
 theorem Lattice.isSymmetric_of_modular_to_dualModular
     (h : ∀ a b : α, IsModular a b → IsDualModular b a) : IsSymmetricLattice α where
   isModular_symm {a} {b} h' := by
@@ -87,6 +91,7 @@ theorem Lattice.isSymmetric_of_modular_to_dualModular
     · rw[inf_comm, sup_comm]
     · rw[inf_comm, sup_comm]
 
+/-- Theorem 1.9 -/
 theorem Lattice.isDualSymmetric_of_dualModular_to_modular
     (h : ∀ a b : α, IsDualModular a b → IsModular b a) : IsDualSymmetricLattice α where
   isDualModular_symm {a} {b} h' := by
@@ -100,7 +105,7 @@ theorem Lattice.isDualSymmetric_of_dualModular_to_modular
     convert h _ _ this a le using 1
     · rw[inf_comm, sup_comm]
     · rw[inf_comm, sup_comm]
-
+/-- Remark 1.8 -/
 instance Sublattice.isModularLattice [IsModularLattice α] {L : Sublattice α} : IsModularLattice L where
   sup_inf_le_assoc_of_le {c} a b le := by
     rcases a
@@ -108,17 +113,17 @@ instance Sublattice.isModularLattice [IsModularLattice α] {L : Sublattice α} :
     rcases c
     simp only [mk_sup_mk, mk_inf_mk, Subtype.mk_le_mk]
     exact IsModularLattice.sup_inf_le_assoc_of_le _ le
-
+/-- Remark 1.8 -/
 instance Set.Icc.isSymmetricLattice [IsSymmetricLattice α] {a b : α} (h : a ≤ b) : IsSymmetricLattice (Set.Icc a b) where
   isModular_symm {c} {d} mod := by
     rw[Lattice.IsModular.Icc_iff h] at mod |-
     exact IsSymmetricLattice.isModular_symm mod
-
+/-- Remark 1.8 -/
 instance Set.Icc.isDualSymmetricLattice [IsDualSymmetricLattice α] {a b : α} (h : a ≤ b) : IsDualSymmetricLattice (Set.Icc a b) where
   isDualModular_symm {c} {d} mod := by
     rw[Lattice.IsDualModular.Icc_iff h] at mod |-
     exact IsDualSymmetricLattice.isDualModular_symm mod
-
+/-- "It follows" below 1.10 -/
 theorem IsWeaklyModularLattice.Ici_modular [OrderBot α] [IsWeaklyModularLattice α] (a : α) (ha : ⊥ < a):
     IsModularLattice (Set.Ici a) where
   sup_inf_le_assoc_of_le {x b} c le := by
@@ -133,7 +138,7 @@ theorem IsWeaklyModularLattice.Ici_modular [OrderBot α] [IsWeaklyModularLattice
       intro eq
       rw[eq] at this
       apply (not_le_of_lt ha this).elim
-
+/-- "It follows" below 1.10 -/
 theorem isWeaklyModularLattice.of_all_Ici_modular [OrderBot α]
     (h : ∀ a : α, ⊥ < a → IsModularLattice (Set.Ici a)) : IsWeaklyModularLattice α where
   pair_isModular_of_inf_ne_bot {a} {b} ne := by
@@ -143,7 +148,7 @@ theorem isWeaklyModularLattice.of_all_Ici_modular [OrderBot α]
     specialize h _ this
     rw[← Lattice.IsModular.Ici_iff (a := ⟨a,ha⟩) (b := ⟨b,hb⟩)]
     apply pair_modular
-
+/-- "It is evident" below 1.11 -/
 theorem isSymmetric_of_botSymmetric_of_weaklyModular
     [OrderBot α] [IsWeaklyModularLattice α] [IsBotSymmetricLattice α] : IsSymmetricLattice α where
   isModular_symm {a} {b} h := by
@@ -151,7 +156,7 @@ theorem isSymmetric_of_botSymmetric_of_weaklyModular
     · apply IsBotSymmetricLattice.isModular_symm_of_inf_eq_bot h h'
     · have : b ⊓ a ≠ ⊥ := by rwa[inf_comm]
       apply IsWeaklyModularLattice.pair_isModular_of_inf_ne_bot this
-
+/-- Remark 1.12 -/
 theorem Lattice.isBotSymmetric_of_modular_to_dualModular [OrderBot α]
     (h : ∀ a b : α, IsModular a b → a ⊓ b = ⊥ → IsDualModular b a) : IsBotSymmetricLattice α where
   isModular_symm_of_inf_eq_bot {a} {b} h' ne := by
