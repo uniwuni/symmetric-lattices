@@ -15,6 +15,8 @@ class IsWeaklyModularLattice (α : Type*) [Lattice α] [OrderBot α] : Prop wher
 class IsBotSymmetricLattice (α : Type*) [Lattice α] [OrderBot α] : Prop where
   isModular_symm_of_inf_eq_bot {a b : α} : Lattice.IsModular a b → a ⊓ b = ⊥ → Lattice.IsModular b a
 
+instance {α : Type*} [Lattice α] [IsSymmetricLattice α] : IsSymm α Lattice.IsModular where
+  symm _ _ := IsSymmetricLattice.isModular_symm
 
 variable {α : Type*}
 instance [Lattice α] [IsModularLattice α] [OrderBot α]: IsWeaklyModularLattice α where
