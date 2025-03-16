@@ -75,7 +75,7 @@ theorem isDualSymmetricLattice_iff_dual_isSymmetricLattice (α : Type*) [Lattice
 attribute [symm] IsSymmetricLattice.isModular_symm IsDualSymmetricLattice.isDualModular_symm
 
 section
-variable {α : Type*} [Lattice α]
+variable {α β : Type*} [Lattice α] [Lattice β]
 /-- Theorem 1.9 -/
 theorem Lattice.isSymmetric_of_modular_to_dualModular
     (h : ∀ a b : α, IsModular a b → IsDualModular b a) : IsSymmetricLattice α where
@@ -172,7 +172,7 @@ theorem Lattice.isBotSymmetric_of_modular_to_dualModular [OrderBot α]
     convert h _ _ mod this a le using 1
     · rw[inf_comm, sup_comm]
     · rw[inf_comm, sup_comm]
-
+/-- Theorem 1.14 -/
 theorem IsBotSymmetricLattice.isSymmetric_of_complemented [BoundedOrder α] [IsBotSymmetricLattice α]
     (h : ∀ a : α, ∃ b, IsCompl a b ∧ Lattice.IsModular a b ∧ Lattice.IsDualModular b a) : IsSymmetricLattice α where
   isModular_symm {a b} mod := by
@@ -226,7 +226,7 @@ instance [∀ i, IsSymmetricLattice (α' i)] : IsSymmetricLattice ((i : _) → �
     apply forall_imp
     intro i
     apply IsSymmetricLattice.isModular_symm
-
+/-- Lemma 1.17 -/
 theorem IsSymmetricLattice.pi_iff [ne : ∀ i, Nonempty (α' i)] : IsSymmetricLattice ((i : _) → α' i) ↔ ∀ i, IsSymmetricLattice (α' i) := by
   constructor
   · intro h i
@@ -256,7 +256,7 @@ instance [∀ i, OrderBot (α' i)] [∀ i, IsBotSymmetricLattice (α' i)] : IsBo
     rw[Lattice.IsModular.pi_iff, Lattice.IsModular.pi_iff]
     intro mod eq i
     apply IsBotSymmetricLattice.isModular_symm_of_inf_eq_bot (mod i) (congrFun eq i)
-
+/-- Lemma 1.17 -/
 theorem IsBotSymmetricLattice.pi_iff [∀ i, OrderBot (α' i)] : IsBotSymmetricLattice ((i : _) → α' i) ↔ ∀ i, IsBotSymmetricLattice (α' i) := by
   constructor
   · intro h i
@@ -287,3 +287,34 @@ theorem IsBotSymmetricLattice.pi_iff [∀ i, OrderBot (α' i)] : IsBotSymmetricL
     · simp[fa]
   · intro h
     infer_instance
+/-- Lemma 1.18 -/
+theorem IsWeaklyModularLattice.of_prod_left [OrderBot α] [OrderBot β] [Nontrivial α] [Nontrivial β]
+    (h : IsWeaklyModularLattice (α × β)) : IsModularLattice α := by
+  apply isModularLattice_of_all_isModular
+  by_contra! h'
+  obtain ⟨a,b,h'⟩ := h'
+  have ⟨b',ne⟩ := exists_ne (⊥ : β)
+  have : (a,b') ⊓ (b, b') ≠ ⊥ := by
+    intro h
+    rw[Prod.ext_iff] at h
+    simp only [Prod.mk_inf_mk, le_refl, inf_of_le_left, Prod.fst_bot, Prod.snd_bot] at h
+    exact ne h.2
+  have : Lattice.IsModular (a,b') (b, b') := IsWeaklyModularLattice.pair_isModular_of_inf_ne_bot this
+  rw[Lattice.IsModular.pair_iff] at this
+  exact h' this.1
+
+/-- Lemma 1.18 -/
+theorem IsWeaklyModularLattice.of_prod_right [OrderBot α] [OrderBot β] [Nontrivial α] [Nontrivial β]
+    (h : IsWeaklyModularLattice (α × β)) : IsModularLattice β := by
+  apply isModularLattice_of_all_isModular
+  by_contra! h'
+  obtain ⟨a,b,h'⟩ := h'
+  have ⟨a',ne⟩ := exists_ne (⊥ : α)
+  have : (a',a) ⊓ (a', b) ≠ ⊥ := by
+    intro h
+    rw[Prod.ext_iff] at h
+    simp only [Prod.mk_inf_mk, le_refl, inf_of_le_left, Prod.fst_bot, Prod.snd_bot] at h
+    exact ne h.1
+  have : Lattice.IsModular (a',a) (a', b) := IsWeaklyModularLattice.pair_isModular_of_inf_ne_bot this
+  rw[Lattice.IsModular.pair_iff] at this
+  exact h' this.2

@@ -322,6 +322,7 @@ theorem OrderIso.isModular_iff {β : Type*} [Lattice β] (f : α ≃o β) {a a' 
 namespace Lattice
 variable {β : Type*} [Lattice β] {ι : Type*} {α' : ι → Type*} [(i : ι) → Lattice (α' i)]
 -- TODO small prods and a couple other equivalences like for typeclasses
+/-- Lemma 1.16 -/
 lemma IsModular.pi_iff {a b : (i : ι) → α' i} : IsModular a b ↔ ∀ i, IsModular (a i) (b i) := by
   unfold IsModular
   constructor
@@ -339,7 +340,7 @@ lemma IsModular.pi_iff {a b : (i : ι) → α' i} : IsModular a b ↔ ∀ i, IsM
   · intro h c le i
     simp only [Pi.inf_apply, Pi.sup_apply]
     apply h _ _ (le i)
-
+/-- Lemma 1.16 -/
 lemma IsModular.pair_iff {a a' : α} {b b' : β} : IsModular (a,b) (a',b') ↔ IsModular a a' ∧ IsModular b b' := by
   unfold IsModular
   rw[Prod.forall]
@@ -354,7 +355,7 @@ lemma IsModular.pair_iff {a a' : α} {b b' : β} : IsModular (a,b) (a',b') ↔ I
       exact h.2
   · intro ⟨h1,h2⟩ a1 b2 ⟨le1,le2⟩
     exact ⟨h1 _ le1, h2 _ le2⟩
-
+/-- Lemma 1.16 -/
 lemma IsDualModular.pair_iff {a a' : α} {b b' : β} : IsDualModular (a,b) (a',b') ↔ IsDualModular a a' ∧ IsDualModular b b' := by
   unfold IsDualModular
   rw[Prod.forall]
